@@ -8,6 +8,10 @@
 
 FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
 
+# ── Install system tools (not in base image) ────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends wget unzip && \
+    rm -rf /var/lib/apt/lists/*
+
 # ── PuLID-Flux custom node ──────────────────────────────────────
 # https://github.com/balazik/ComfyUI-PuLID-Flux
 RUN cd /comfyui/custom_nodes && \
@@ -20,18 +24,18 @@ RUN pip install --no-cache-dir insightface onnxruntime-gpu facexlib
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
-    wget -q --show-progress -O /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors \
+    wget -q -O /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors \
     "https://huggingface.co/guozinan/PuLID/resolve/main/pulid_flux_v0.9.0.safetensors"
 
 # ── InsightFace AntelopeV2 models (face detection/recognition) ─
 RUN mkdir -p /comfyui/models/insightface/models/antelopev2 && \
     cd /tmp && \
-    wget -q --show-progress -O antelopev2.zip \
+    wget -q -O antelopev2.zip \
     "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip" && \
     unzip -o antelopev2.zip -d /comfyui/models/insightface/models/antelopev2/ && \
     rm antelopev2.zip
 
-# ── EVA-CLIP (auto-downloads on first run, but pre-cache for fast cold start)
+# ── EVA-CLIP (pre-cache for fast cold start) ────────────────────
 RUN mkdir -p /root/.cache/huggingface && \
     python -c "from huggingface_hub import hf_hub_download; \
     hf_hub_download('QuanSun/EVA-CLIP', 'EVA02_CLIP_L_336_psz14_s6B.pt', \
@@ -50,14 +54,13 @@ RUN pip install --no-cache-dir cupy-cuda12x
 
 # ── Pre-download RIFE models (avoid cold-start download) ────────
 RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
-    wget -q --show-progress -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife47.pth \
+    wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife47.pth \
     "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife47.pth" && \
-    wget -q --show-progress -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth \
+    wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth \
     "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth"
 
 # ── Verify installation ────────────────────────────────────────
 RUN python -c "import insightface; print('InsightFace OK')" && \
-    python -c "import cupy; print('CuPy OK: CUDA', cupy.cuda.runtime.runtimeGetVersion())" && \
     ls /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors && \
     ls /comfyui/custom_nodes/ComfyUI-PuLID-Flux/nodes.py && \
     ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/vfi_models/rife/__init__.py && \
