@@ -6,7 +6,7 @@
 #
 # Build: docker build --platform linux/amd64 -t comfyui-flux-pulid-rife .
 
-FROM runpod/worker-comfyui:3.3.1-flux
+FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
 
 # ── PuLID-Flux custom node ──────────────────────────────────────
 # https://github.com/balazik/ComfyUI-PuLID-Flux
