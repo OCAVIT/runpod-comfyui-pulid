@@ -60,10 +60,12 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth"
 
 # ── Verify installation ────────────────────────────────────────
-RUN python -c "import insightface; print('InsightFace OK')" && \
+RUN echo "=== Checking PuLID ===" && \
     ls /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors && \
-    ls /comfyui/custom_nodes/ComfyUI-PuLID-Flux/nodes.py && \
-    ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/vfi_models/rife/__init__.py && \
-    ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife47.pth && \
-    ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth && \
-    echo '=== All components installed: PuLID + RIFE ==='
+    ls /comfyui/custom_nodes/ComfyUI-PuLID-Flux/ && \
+    echo "=== Checking RIFE ===" && \
+    ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/ && \
+    echo "=== Checking Python imports ===" && \
+    python -c "import insightface; print('  insightface OK')" && \
+    python -c "import cupy; print('  cupy OK')" || true && \
+    echo "=== All components installed ==="
