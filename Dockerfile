@@ -71,30 +71,5 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     echo "rife49.pth download failed — will download on first use")
 
 # ── Verify installation (WILL FAIL BUILD if anything is wrong) ──
-RUN echo "=== Debug insightface ===" && \
-    python -c "\
-import os, glob, onnxruntime, insightface; \
-print('insightface version:', insightface.__version__); \
-print('onnxruntime version:', onnxruntime.__version__); \
-print('onnxruntime providers:', onnxruntime.get_available_providers()); \
-model_dir = '/comfyui/models/insightface/models/antelopev2'; \
-onnx_files = sorted(glob.glob(os.path.join(model_dir, '*.onnx'))); \
-print(f'Found {len(onnx_files)} ONNX files in {model_dir}'); \
-for f in onnx_files: \
-    try: \
-        sess = onnxruntime.InferenceSession(f, providers=['CPUExecutionProvider']); \
-        print(f'  OK: {os.path.basename(f)} inputs={[i.name for i in sess.get_inputs()]}'); \
-    except Exception as e: \
-        print(f'  FAIL: {os.path.basename(f)} -> {e}'); \
-print('--- Now trying FaceAnalysis ---'); \
-from insightface.app import FaceAnalysis; \
-import insightface.app.face_analysis as fa; \
-print('FaceAnalysis source:', fa.__file__); \
-import inspect; \
-sig = inspect.signature(FaceAnalysis.__init__); \
-print('FaceAnalysis.__init__ params:', list(sig.parameters.keys())); \
-" && \
-    echo "=== PuLID + RIFE ===" && \
-    ls /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors && \
-    ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/ && \
-    echo "=== CHECKS DONE ==="
+COPY verify_install.py /tmp/verify_install.py
+RUN python3 /tmp/verify_install.py && rm /tmp/verify_install.py
