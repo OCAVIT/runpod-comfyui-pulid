@@ -73,9 +73,9 @@ RUN pip install --no-cache-dir cupy-cuda12x
 # ── Pre-download RIFE models (from HuggingFace — GitHub URLs are dead) ──
 RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife47.pth \
-    "https://huggingface.co/jasonot/mycomfyui/resolve/main/rife47.pth" && \
+    "https://huggingface.co/wavespeed/misc/resolve/main/rife/rife47.pth" && \
     wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth \
-    "https://huggingface.co/jasonot/mycomfyui/resolve/main/rife49.pth" && \
+    "https://huggingface.co/hfmaster/models-moved/resolve/main/rife/rife49.pth" && \
     ls -lh /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/
 
 # ── Verify installation ──────────────────────────────────────────
