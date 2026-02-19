@@ -20,7 +20,8 @@ RUN cd /comfyui/custom_nodes && \
     pip install --no-cache-dir -r requirements.txt
 
 # ── InsightFace + ONNX (face analysis for PuLID) ───────────────
-RUN pip install --no-cache-dir insightface onnxruntime-gpu facexlib
+# insightface 0.7.3 required: newer versions removed 'providers' param from FaceAnalysis.__init__()
+RUN pip install --no-cache-dir insightface==0.7.3 onnxruntime-gpu facexlib
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
