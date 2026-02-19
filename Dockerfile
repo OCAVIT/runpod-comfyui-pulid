@@ -8,6 +8,11 @@
 
 FROM runpod/worker-comfyui:5.5.1-flux1-dev-fp8
 
+# ── Override CUDA version check ─────────────────────────────────
+# Base image sets NVIDIA_REQUIRE_CUDA="cuda>=12.6" but CUDA 12.4
+# drivers work fine via forward compatibility. Lower the requirement.
+ENV NVIDIA_REQUIRE_CUDA="cuda>=12.4"
+
 # ── Install system tools (not in base image) ────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends wget unzip && \
     rm -rf /var/lib/apt/lists/*
