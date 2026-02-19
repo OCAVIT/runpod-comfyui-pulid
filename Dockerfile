@@ -19,6 +19,10 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux && \
     pip install --no-cache-dir -r requirements.txt
 
+# ── Patch: remove 'providers' kwarg (not supported in latest insightface)
+RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
+    sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py
+
 # ── InsightFace + onnxruntime CPU (face analysis for PuLID) ─────
 # onnxruntime (CPU) for ONNX face models — does NOT conflict with PyTorch CUDA.
 # Do NOT install onnxruntime-gpu — it overwrites PyTorch CUDA and breaks ComfyUI.
