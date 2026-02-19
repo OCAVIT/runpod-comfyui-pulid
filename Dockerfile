@@ -6,7 +6,7 @@
 #
 # Build: docker build --platform linux/amd64 -t comfyui-flux-pulid-rife .
 
-FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
+FROM runpod/worker-comfyui:5.5.1-flux1-dev-fp8
 
 # ── Install system tools (not in base image) ────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends wget unzip && \
