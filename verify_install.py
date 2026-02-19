@@ -79,7 +79,15 @@ if os.path.exists(pulid_path):
 else:
     print(f"MISSING: {pulid_path}")
 
-# 7. Check RIFE
+# 7. Check VideoHelperSuite
+print("\n--- VideoHelperSuite ---")
+vhs_dir = "/comfyui/custom_nodes/ComfyUI-VideoHelperSuite"
+if os.path.exists(vhs_dir):
+    print(f"OK: {vhs_dir} installed")
+else:
+    print(f"MISSING: {vhs_dir}")
+
+# 8. Check RIFE
 print("\n--- RIFE models ---")
 rife_dir = "/comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/"
 if os.path.exists(rife_dir):

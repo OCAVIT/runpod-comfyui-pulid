@@ -52,6 +52,14 @@ RUN mkdir -p /root/.cache/huggingface && \
     cache_dir='/root/.cache/huggingface')" 2>/dev/null || \
     echo "EVA-CLIP pre-download skipped (will auto-download on first run)"
 
+# ── VideoHelperSuite (VHS_LoadVideo, VHS_VideoCombine) ────────────
+# Required for RIFE: loads video as frames, combines frames back to video
+# https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite
+RUN cd /comfyui/custom_nodes && \
+    git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
+    cd ComfyUI-VideoHelperSuite && \
+    pip install --no-cache-dir -r requirements.txt
+
 # ── RIFE Frame Interpolation ────────────────────────────────────
 # https://github.com/Fannovel16/ComfyUI-Frame-Interpolation
 RUN cd /comfyui/custom_nodes && \
