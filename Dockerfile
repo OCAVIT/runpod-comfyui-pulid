@@ -26,8 +26,7 @@ RUN cd /comfyui/custom_nodes && \
 # GitHub version has FaceAnalysis.__init__(self, name, root, allowed_modules, **kwargs).
 # PuLID-Flux passes providers= kwarg → needs **kwargs support.
 # --force-reinstall overrides the PyPI version installed by PuLID-Flux requirements.
-# --no-deps avoids reinstalling numpy/scipy/etc (already installed).
-RUN pip install --no-cache-dir --force-reinstall --no-deps \
+RUN pip install --no-cache-dir --force-reinstall \
     "insightface @ git+https://github.com/deepinsight/insightface.git@master#subdirectory=python-package"
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
