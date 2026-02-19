@@ -19,17 +19,11 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── Patch PuLID-Flux for insightface compatibility ───────────────
-# Newer insightface removed 'providers' param from FaceAnalysis.__init__().
-# Patch pulidflux.py to remove it, then install latest insightface.
-RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
-    sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py
-
-# ── InsightFace (face analysis for PuLID) ───────────────────────
-# Do NOT install onnxruntime-gpu or facexlib — they conflict with
-# base image dependencies and break ComfyUI startup.
+# ── InsightFace + onnxruntime CPU (face analysis for PuLID) ─────
+# onnxruntime (CPU) for ONNX face models — does NOT conflict with PyTorch CUDA.
+# Do NOT install onnxruntime-gpu — it overwrites PyTorch CUDA and breaks ComfyUI.
 RUN pip install --no-cache-dir --no-deps insightface && \
-    pip install --no-cache-dir prettytable easydict albumentations
+    pip install --no-cache-dir onnxruntime prettytable easydict albumentations
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
@@ -72,9 +66,8 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
 RUN echo "=== Checking PuLID ===" && \
     ls /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors && \
     ls /comfyui/custom_nodes/ComfyUI-PuLID-Flux/ && \
-    echo "=== Checking patch ===" && \
-    grep -c "providers" /comfyui/custom_nodes/ComfyUI-PuLID-Flux/pulidflux.py || \
-    echo "  providers removed from pulidflux.py (OK)" && \
+    echo "=== Checking onnxruntime ===" && \
+    python -c "import onnxruntime; print('  onnxruntime', onnxruntime.__version__)" && \
     echo "=== Checking RIFE ===" && \
     ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/ && \
     echo "=== Checking Python imports ===" && \
