@@ -9,7 +9,9 @@
 FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
 
 # ── Install system tools (not in base image) ────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends wget unzip && \
+# build-essential + python3-dev needed to compile insightface from GitHub source
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget unzip build-essential python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # ── PuLID-Flux custom node ──────────────────────────────────────
