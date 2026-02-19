@@ -78,6 +78,12 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     "https://huggingface.co/hfmaster/models-moved/resolve/main/rife/rife49.pth" && \
     ls -lh /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/
 
+# ── Patch handler: VHS_VideoCombine uses "gifs" key, not "images" ──
+# RunPod worker only checks "images" → video output silently dropped.
+# This patch normalizes "gifs" → "images" so videos are returned in API.
+COPY patch_handler.py /tmp/patch_handler.py
+RUN python3 /tmp/patch_handler.py && rm /tmp/patch_handler.py
+
 # ── Verify installation ──────────────────────────────────────────
 COPY verify_install.py /tmp/verify_install.py
 RUN python3 /tmp/verify_install.py && rm /tmp/verify_install.py
