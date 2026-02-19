@@ -24,10 +24,14 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux && \
     pip install --no-cache-dir -r requirements.txt
 
+# ── Patch PuLID-Flux for insightface compatibility ───────────────
+# Newer insightface removed 'providers' param from FaceAnalysis.__init__().
+# Patch pulidflux.py to remove it, then install latest insightface.
+RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
+    sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py
+
 # ── InsightFace + ONNX (face analysis for PuLID) ───────────────
-# Pin insightface==0.7.3 — it supports 'providers' kwarg in FaceAnalysis()
-# which PuLID-Flux requires. Newer versions removed this param.
-RUN pip install --no-cache-dir insightface==0.7.3 onnxruntime-gpu facexlib
+RUN pip install --no-cache-dir insightface onnxruntime-gpu facexlib
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
