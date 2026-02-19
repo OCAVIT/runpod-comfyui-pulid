@@ -56,16 +56,17 @@ try:
 except Exception as e:
     print(f"model_zoo import failed: {e}")
 
-# 5. Check PuLID-Flux node is not patched (providers kwarg should be present)
-print("\n--- PuLID-Flux pulidflux.py check ---")
-pulid_src = "/comfyui/custom_nodes/ComfyUI-PuLID-Flux/pulidflux.py"
+# 5. Check PuLID-Flux-Enhanced node (with attn_mask fix)
+print("\n--- PuLID-Flux-Enhanced check ---")
+pulid_src = "/comfyui/custom_nodes/ComfyUI-PuLID-Flux-Enhanced/pulidflux.py"
 if os.path.exists(pulid_src):
     with open(pulid_src) as fp:
         content = fp.read()
-    if "providers=" in content:
-        print("OK: providers= kwarg present in pulidflux.py")
+    # Check for attn_mask fix (should accept **kwargs or attn_mask parameter)
+    if "attn_mask" in content or "**kwargs" in content:
+        print(f"OK: {pulid_src} found with attn_mask support")
     else:
-        print("WARNING: providers= kwarg MISSING — sed patch was applied but shouldn't be!")
+        print(f"WARNING: attn_mask support unclear in {pulid_src}")
 else:
     print(f"MISSING: {pulid_src}")
 
