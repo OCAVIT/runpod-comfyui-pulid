@@ -98,9 +98,25 @@ if os.path.exists(rife_dir):
 else:
     print(f"MISSING: {rife_dir}")
 
-# 8. Summary
+# 9. Verify RIFE model files are valid (not empty / truncated)
+print("\n--- RIFE model validation ---")
+rife_ok = True
+for model_name in ["rife47.pth", "rife49.pth"]:
+    model_path = os.path.join(rife_dir, model_name) if os.path.exists(rife_dir) else ""
+    if model_path and os.path.exists(model_path):
+        size_mb = os.path.getsize(model_path) / (1024 * 1024)
+        if size_mb > 1:
+            print(f"  OK: {model_name} ({size_mb:.1f} MB)")
+        else:
+            print(f"  BAD: {model_name} too small ({size_mb:.2f} MB) — download likely failed")
+            rife_ok = False
+    else:
+        print(f"  MISSING: {model_name}")
+        rife_ok = False
+
+# 10. Summary
 print("\n" + "=" * 60)
-if has_kwargs and len(onnx_files) >= 4:
+if has_kwargs and len(onnx_files) >= 4 and rife_ok:
     print("ALL CHECKS PASSED")
 else:
     issues = []
@@ -108,5 +124,7 @@ else:
         issues.append("insightface missing **kwargs")
     if len(onnx_files) < 4:
         issues.append(f"only {len(onnx_files)} ONNX files (need 4+)")
+    if not rife_ok:
+        issues.append("RIFE models missing or corrupted")
     print(f"ISSUES: {', '.join(issues)}")
 print("=" * 60)
