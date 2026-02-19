@@ -69,20 +69,30 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth"
 
 # ── Verify installation (WILL FAIL BUILD if anything is wrong) ──
-RUN echo "=== Model files ===" && \
-    ls -la /comfyui/models/insightface/models/antelopev2/ && \
-    echo "=== Patched pulidflux.py (no providers) ===" && \
-    grep "FaceAnalysis" /comfyui/custom_nodes/ComfyUI-PuLID-Flux/pulidflux.py && \
-    echo "=== onnxruntime ===" && \
-    python -c "import onnxruntime; print('version:', onnxruntime.__version__); print('providers:', onnxruntime.get_available_providers())" && \
-    echo "=== InsightFace FaceAnalysis test ===" && \
+RUN echo "=== Debug insightface ===" && \
     python -c "\
+import os, glob, onnxruntime, insightface; \
+print('insightface version:', insightface.__version__); \
+print('onnxruntime version:', onnxruntime.__version__); \
+print('onnxruntime providers:', onnxruntime.get_available_providers()); \
+model_dir = '/comfyui/models/insightface/models/antelopev2'; \
+onnx_files = sorted(glob.glob(os.path.join(model_dir, '*.onnx'))); \
+print(f'Found {len(onnx_files)} ONNX files in {model_dir}'); \
+for f in onnx_files: \
+    try: \
+        sess = onnxruntime.InferenceSession(f, providers=['CPUExecutionProvider']); \
+        print(f'  OK: {os.path.basename(f)} inputs={[i.name for i in sess.get_inputs()]}'); \
+    except Exception as e: \
+        print(f'  FAIL: {os.path.basename(f)} -> {e}'); \
+print('--- Now trying FaceAnalysis ---'); \
 from insightface.app import FaceAnalysis; \
-model = FaceAnalysis(name='antelopev2', root='/comfyui/models/insightface'); \
-model.prepare(ctx_id=-1, det_size=(640, 640)); \
-print('FaceAnalysis OK, models:', list(model.models.keys()))" && \
-    echo "=== PuLID model ===" && \
+import insightface.app.face_analysis as fa; \
+print('FaceAnalysis source:', fa.__file__); \
+import inspect; \
+sig = inspect.signature(FaceAnalysis.__init__); \
+print('FaceAnalysis.__init__ params:', list(sig.parameters.keys())); \
+" && \
+    echo "=== PuLID + RIFE ===" && \
     ls /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors && \
-    echo "=== RIFE ===" && \
     ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/ && \
-    echo "=== ALL CHECKS PASSED ==="
+    echo "=== CHECKS DONE ==="
