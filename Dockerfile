@@ -8,11 +8,6 @@
 
 FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
 
-# ── Override CUDA version check ─────────────────────────────────
-# Base image sets NVIDIA_REQUIRE_CUDA="cuda>=12.6" but CUDA 12.4
-# drivers work fine via forward compatibility. Lower the requirement.
-ENV NVIDIA_REQUIRE_CUDA="cuda>=12.4"
-
 # ── Install system tools (not in base image) ────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends wget unzip && \
     rm -rf /var/lib/apt/lists/*
@@ -30,8 +25,11 @@ RUN cd /comfyui/custom_nodes && \
 RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
     sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py
 
-# ── InsightFace + ONNX (face analysis for PuLID) ───────────────
-RUN pip install --no-cache-dir insightface onnxruntime-gpu facexlib
+# ── InsightFace (face analysis for PuLID) ───────────────────────
+# Do NOT install onnxruntime-gpu or facexlib — they conflict with
+# base image dependencies and break ComfyUI startup.
+RUN pip install --no-cache-dir --no-deps insightface && \
+    pip install --no-cache-dir prettytable easydict albumentations
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
