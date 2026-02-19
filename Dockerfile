@@ -14,11 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget unzip build-essential python3-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# ── PuLID-Flux custom node ──────────────────────────────────────
-# https://github.com/balazik/ComfyUI-PuLID-Flux
+# ── PuLID-Flux custom node (Enhanced version with attn_mask fix) ──────
+# https://github.com/sipie800/ComfyUI-PuLID-Flux-Enhanced
+# Fixes "forward_orig() got an unexpected keyword argument 'attn_mask'" error
 RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/balazik/ComfyUI-PuLID-Flux.git && \
-    cd ComfyUI-PuLID-Flux && \
+    git clone https://github.com/sipie800/ComfyUI-PuLID-Flux-Enhanced.git && \
+    cd ComfyUI-PuLID-Flux-Enhanced && \
     pip install --no-cache-dir -r requirements.txt
 
 # ── InsightFace from GitHub (NOT PyPI!) ──────────────────────────
