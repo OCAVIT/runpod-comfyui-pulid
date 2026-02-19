@@ -61,12 +61,14 @@ RUN cd /comfyui/custom_nodes && \
 # ── CuPy for RIFE GPU acceleration (CUDA 12.x) ─────────────────
 RUN pip install --no-cache-dir cupy-cuda12x
 
-# ── Pre-download RIFE models (avoid cold-start download) ────────
+# ── Pre-download RIFE models (optional — will auto-download on first run)
 RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
-    wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife47.pth \
-    "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife47.pth" && \
-    wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth \
-    "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth"
+    (wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife47.pth \
+    "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife47.pth" || \
+    echo "rife47.pth download failed — will download on first use") && \
+    (wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth \
+    "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth" || \
+    echo "rife49.pth download failed — will download on first use")
 
 # ── Verify installation (WILL FAIL BUILD if anything is wrong) ──
 RUN echo "=== Debug insightface ===" && \
