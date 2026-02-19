@@ -6,7 +6,7 @@
 #
 # Build: docker build --platform linux/amd64 -t comfyui-flux-pulid-rife .
 
-FROM runpod/worker-comfyui:5.5.1-flux1-dev-fp8
+FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
 
 # ── Override CUDA version check ─────────────────────────────────
 # Base image sets NVIDIA_REQUIRE_CUDA="cuda>=12.6" but CUDA 12.4
@@ -24,15 +24,10 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── Patch PuLID-Flux for insightface compatibility ───────────────
-# Newer insightface removed 'providers' param from FaceAnalysis.__init__().
-# Remove it from pulidflux.py so it works with any insightface version.
-RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
-    sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py && \
-    echo "Patched pulidflux.py — removed providers kwarg from FaceAnalysis()"
-
 # ── InsightFace + ONNX (face analysis for PuLID) ───────────────
-RUN pip install --no-cache-dir insightface onnxruntime-gpu facexlib
+# Pin insightface==0.7.3 — it supports 'providers' kwarg in FaceAnalysis()
+# which PuLID-Flux requires. Newer versions removed this param.
+RUN pip install --no-cache-dir insightface==0.7.3 onnxruntime-gpu facexlib
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
