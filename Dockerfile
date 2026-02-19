@@ -19,15 +19,14 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── Patch: remove 'providers' kwarg (not supported in latest insightface)
-RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
-    sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py
-
-# ── InsightFace (face analysis for PuLID) ───────────────────────
-# Install normally (with deps: onnxruntime, scikit-learn, scipy, opencv).
-# insightface pulls onnxruntime (CPU) — does NOT conflict with PyTorch CUDA.
-# Do NOT install onnxruntime-gpu separately — that breaks ComfyUI.
-RUN pip install --no-cache-dir insightface
+# ── InsightFace from GitHub (NOT PyPI!) ──────────────────────────
+# PyPI insightface has FaceAnalysis.__init__(self, name, root) — NO **kwargs.
+# GitHub version has FaceAnalysis.__init__(self, name, root, allowed_modules, **kwargs).
+# PuLID-Flux passes providers= kwarg → needs **kwargs support.
+# --force-reinstall overrides the PyPI version installed by PuLID-Flux requirements.
+# --no-deps avoids reinstalling numpy/scipy/etc (already installed).
+RUN pip install --no-cache-dir --force-reinstall --no-deps \
+    "insightface @ git+https://github.com/deepinsight/insightface.git@master#subdirectory=python-package"
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
@@ -70,6 +69,6 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth" || \
     echo "rife49.pth download failed — will download on first use")
 
-# ── Verify installation (WILL FAIL BUILD if anything is wrong) ──
+# ── Verify installation ──────────────────────────────────────────
 COPY verify_install.py /tmp/verify_install.py
 RUN python3 /tmp/verify_install.py && rm /tmp/verify_install.py

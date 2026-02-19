@@ -1,6 +1,4 @@
-"""Verify PuLID + InsightFace + RIFE installation in Docker image.
-Runs during docker build — fails build if critical components missing.
-"""
+"""Verify PuLID + InsightFace + RIFE installation in Docker image."""
 import os
 import glob
 import traceback
@@ -10,14 +8,29 @@ print("=" * 60)
 print("VERIFY INSTALLATION")
 print("=" * 60)
 
-# 1. Check onnxruntime
-import onnxruntime
-print(f"onnxruntime version: {onnxruntime.__version__}")
-print(f"onnxruntime providers: {onnxruntime.get_available_providers()}")
-
-# 2. Check insightface
+# 1. Check insightface version and FaceAnalysis signature
 import insightface
 print(f"insightface version: {insightface.__version__}")
+
+from insightface.app import FaceAnalysis
+sig = inspect.signature(FaceAnalysis.__init__)
+params = list(sig.parameters.keys())
+print(f"FaceAnalysis.__init__ params: {params}")
+
+has_kwargs = any(
+    p.kind == inspect.Parameter.VAR_KEYWORD
+    for p in sig.parameters.values()
+)
+print(f"Has **kwargs: {has_kwargs}")
+
+if not has_kwargs:
+    print("WARNING: FaceAnalysis missing **kwargs — providers won't be passed!")
+    print("This means PuLID-Flux will FAIL. Need GitHub version of insightface.")
+
+# 2. Check onnxruntime
+import onnxruntime
+print(f"\nonnxruntime version: {onnxruntime.__version__}")
+print(f"onnxruntime providers: {onnxruntime.get_available_providers()}")
 
 # 3. Check ONNX model files
 model_dir = "/comfyui/models/insightface/models/antelopev2"
@@ -27,41 +40,10 @@ for f in onnx_files:
     size_mb = os.path.getsize(f) / (1024 * 1024)
     print(f"  {os.path.basename(f)} ({size_mb:.1f} MB)")
 
-# 4. Dump FaceAnalysis.__init__ source code
-print("\n--- FaceAnalysis.__init__ SOURCE CODE ---")
-from insightface.app import FaceAnalysis
-import insightface.app.face_analysis as fa
-try:
-    src = inspect.getsource(FaceAnalysis.__init__)
-    print(src)
-except Exception as e:
-    print(f"Cannot get source: {e}")
-
-# 5. Dump ensure_available source code
-print("\n--- ensure_available SOURCE CODE ---")
-try:
-    from insightface.utils import storage
-    src = inspect.getsource(storage.ensure_available)
-    print(src)
-except Exception as e:
-    print(f"Cannot get ensure_available source: {e}")
-
-# 6. Test ensure_available resolution
-print("\n--- ensure_available resolution ---")
-try:
-    resolved = storage.ensure_available('models', 'antelopev2', root='/comfyui/models/insightface')
-    print(f"Resolved model_dir: {resolved}")
-    resolved_files = glob.glob(os.path.join(resolved, '*.onnx'))
-    print(f"Files in resolved dir: {resolved_files}")
-except Exception as e:
-    print(f"ensure_available failed: {e}")
-    traceback.print_exc()
-
-# 7. Test model_zoo.get_model for each file
-print("\n--- model_zoo.get_model test ---")
+# 4. Test model_zoo.get_model for each file (should work with CPU)
+print("\nmodel_zoo.get_model test:")
 try:
     from insightface.model_zoo import model_zoo
-    # Try with explicit providers
     for f in onnx_files:
         try:
             m = model_zoo.get_model(f, providers=['CPUExecutionProvider'])
@@ -71,56 +53,23 @@ try:
                 print(f"  {os.path.basename(f)} -> taskname={m.taskname}")
         except Exception as e:
             print(f"  {os.path.basename(f)} -> ERROR: {e}")
-    # Also try without providers
-    print("  (retry without providers kwarg:)")
-    for f in onnx_files:
-        try:
-            m = model_zoo.get_model(f)
-            if m is None:
-                print(f"  {os.path.basename(f)} -> None (not recognized)")
-            else:
-                print(f"  {os.path.basename(f)} -> taskname={m.taskname}")
-        except Exception as e:
-            print(f"  {os.path.basename(f)} -> ERROR: {e}")
 except Exception as e:
-    print(f"model_zoo import/test failed: {e}")
-    traceback.print_exc()
+    print(f"model_zoo import failed: {e}")
 
-# 8. Dump model_zoo.get_model source
-print("\n--- model_zoo.get_model SOURCE CODE ---")
-try:
-    src = inspect.getsource(model_zoo.get_model)
-    print(src)
-except Exception as e:
-    print(f"Cannot get source: {e}")
+# 5. Check PuLID-Flux node is not patched (providers kwarg should be present)
+print("\n--- PuLID-Flux pulidflux.py check ---")
+pulid_src = "/comfyui/custom_nodes/ComfyUI-PuLID-Flux/pulidflux.py"
+if os.path.exists(pulid_src):
+    with open(pulid_src) as fp:
+        content = fp.read()
+    if "providers=" in content:
+        print("OK: providers= kwarg present in pulidflux.py")
+    else:
+        print("WARNING: providers= kwarg MISSING — sed patch was applied but shouldn't be!")
+else:
+    print(f"MISSING: {pulid_src}")
 
-# 9. Try FaceAnalysis instantiation
-print("\n--- FaceAnalysis instantiation ---")
-try:
-    app = FaceAnalysis(
-        name="antelopev2",
-        root="/comfyui/models/insightface",
-        providers=["CPUExecutionProvider"]
-    )
-    app.prepare(ctx_id=0, det_size=(640, 640))
-    print(f"OK with providers! Models: {list(app.models.keys())}")
-except TypeError as e:
-    print(f"With providers: TypeError: {e}")
-    try:
-        app = FaceAnalysis(
-            name="antelopev2",
-            root="/comfyui/models/insightface"
-        )
-        app.prepare(ctx_id=0, det_size=(640, 640))
-        print(f"OK without providers! Models: {list(app.models.keys())}")
-    except Exception as e2:
-        print(f"Without providers: {e2}")
-        traceback.print_exc()
-except Exception as e:
-    print(f"FaceAnalysis FAILED: {e}")
-    traceback.print_exc()
-
-# 10. Check PuLID model
+# 6. Check PuLID model
 print("\n--- PuLID model ---")
 pulid_path = "/comfyui/models/pulid/pulid_flux_v0.9.0.safetensors"
 if os.path.exists(pulid_path):
@@ -129,7 +78,7 @@ if os.path.exists(pulid_path):
 else:
     print(f"MISSING: {pulid_path}")
 
-# 11. Check RIFE
+# 7. Check RIFE
 print("\n--- RIFE models ---")
 rife_dir = "/comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/"
 if os.path.exists(rife_dir):
@@ -140,6 +89,15 @@ if os.path.exists(rife_dir):
 else:
     print(f"MISSING: {rife_dir}")
 
+# 8. Summary
 print("\n" + "=" * 60)
-print("CHECKS DONE")
+if has_kwargs and len(onnx_files) >= 4:
+    print("ALL CHECKS PASSED")
+else:
+    issues = []
+    if not has_kwargs:
+        issues.append("insightface missing **kwargs")
+    if len(onnx_files) < 4:
+        issues.append(f"only {len(onnx_files)} ONNX files (need 4+)")
+    print(f"ISSUES: {', '.join(issues)}")
 print("=" * 60)
