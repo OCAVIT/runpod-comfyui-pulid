@@ -23,11 +23,11 @@ RUN cd /comfyui/custom_nodes && \
 RUN cd /comfyui/custom_nodes/ComfyUI-PuLID-Flux && \
     sed -i "s/, providers=\[provider + 'ExecutionProvider',\]//" pulidflux.py
 
-# ── InsightFace + onnxruntime CPU (face analysis for PuLID) ─────
-# onnxruntime (CPU) for ONNX face models — does NOT conflict with PyTorch CUDA.
-# Do NOT install onnxruntime-gpu — it overwrites PyTorch CUDA and breaks ComfyUI.
-RUN pip install --no-cache-dir --no-deps insightface && \
-    pip install --no-cache-dir onnxruntime prettytable easydict albumentations
+# ── InsightFace (face analysis for PuLID) ───────────────────────
+# Install normally (with deps: onnxruntime, scikit-learn, scipy, opencv).
+# insightface pulls onnxruntime (CPU) — does NOT conflict with PyTorch CUDA.
+# Do NOT install onnxruntime-gpu separately — that breaks ComfyUI.
+RUN pip install --no-cache-dir insightface
 
 # ── PuLID Flux model (~1.1 GB) ─────────────────────────────────
 RUN mkdir -p /comfyui/models/pulid && \
@@ -35,11 +35,13 @@ RUN mkdir -p /comfyui/models/pulid && \
     "https://huggingface.co/guozinan/PuLID/resolve/main/pulid_flux_v0.9.0.safetensors"
 
 # ── InsightFace AntelopeV2 models (face detection/recognition) ─
-RUN mkdir -p /comfyui/models/insightface/models/antelopev2 && \
+# Zip contains antelopev2/*.onnx — extract to models/ (NOT models/antelopev2/)
+RUN mkdir -p /comfyui/models/insightface/models && \
     cd /tmp && \
     wget -q -O antelopev2.zip \
     "https://github.com/deepinsight/insightface/releases/download/v0.7/antelopev2.zip" && \
-    unzip -o antelopev2.zip -d /comfyui/models/insightface/models/antelopev2/ && \
+    unzip -o antelopev2.zip -d /comfyui/models/insightface/models/ && \
+    ls /comfyui/models/insightface/models/antelopev2/ && \
     rm antelopev2.zip
 
 # ── EVA-CLIP (pre-cache for fast cold start) ────────────────────
