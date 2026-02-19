@@ -68,15 +68,21 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
     wget -q -O /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/rife49.pth \
     "https://github.com/styler00dollar/VSGAN-tensorrt-docker/releases/download/models/rife49.pth"
 
-# ── Verify installation ────────────────────────────────────────
-RUN echo "=== Checking PuLID ===" && \
+# ── Verify installation (WILL FAIL BUILD if anything is wrong) ──
+RUN echo "=== Model files ===" && \
+    ls -la /comfyui/models/insightface/models/antelopev2/ && \
+    echo "=== Patched pulidflux.py (no providers) ===" && \
+    grep "FaceAnalysis" /comfyui/custom_nodes/ComfyUI-PuLID-Flux/pulidflux.py && \
+    echo "=== onnxruntime ===" && \
+    python -c "import onnxruntime; print('version:', onnxruntime.__version__); print('providers:', onnxruntime.get_available_providers())" && \
+    echo "=== InsightFace FaceAnalysis test ===" && \
+    python -c "\
+from insightface.app import FaceAnalysis; \
+model = FaceAnalysis(name='antelopev2', root='/comfyui/models/insightface'); \
+model.prepare(ctx_id=-1, det_size=(640, 640)); \
+print('FaceAnalysis OK, models:', list(model.models.keys()))" && \
+    echo "=== PuLID model ===" && \
     ls /comfyui/models/pulid/pulid_flux_v0.9.0.safetensors && \
-    ls /comfyui/custom_nodes/ComfyUI-PuLID-Flux/ && \
-    echo "=== Checking onnxruntime ===" && \
-    python -c "import onnxruntime; print('  onnxruntime', onnxruntime.__version__)" && \
-    echo "=== Checking RIFE ===" && \
+    echo "=== RIFE ===" && \
     ls /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife/ && \
-    echo "=== Checking Python imports ===" && \
-    python -c "import insightface; print('  insightface OK')" && \
-    python -c "import cupy; print('  cupy OK')" || true && \
-    echo "=== All components installed ==="
+    echo "=== ALL CHECKS PASSED ==="
