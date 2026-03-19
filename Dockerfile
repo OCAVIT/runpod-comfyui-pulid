@@ -52,6 +52,25 @@ RUN mkdir -p /comfyui/models/insightface/models && \
     ls /comfyui/models/insightface/models/antelopev2/ && \
     rm antelopev2.zip
 
+# ── buffalo_l + swap models + GFPGAN ──────────────────────────────
+RUN mkdir -p /root/.insightface/models && \
+    cd /tmp && \
+    wget -q -O buffalo_l.zip \
+    "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip" && \
+    unzip -o buffalo_l.zip -d /root/.insightface/models/ && \
+    rm buffalo_l.zip && \
+    wget -q -O /comfyui/models/insightface/inswapper_128.onnx \
+    "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx" && \
+    wget -q -O /comfyui/models/insightface/hyperswap_1c_256.onnx \
+    "https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx" && \
+    mkdir -p /comfyui/models/facerestore_models && \
+    wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
+    "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth"
+
+# ── Ensure onnxruntime-gpu ────────────────────────────────────────
+RUN pip uninstall -y onnxruntime 2>/dev/null; \
+    pip install --no-cache-dir --force-reinstall onnxruntime-gpu
+
 # ── EVA-CLIP (pre-cache for fast cold start) ────────────────────
 RUN mkdir -p /root/.cache/huggingface && \
     python -c "from huggingface_hub import hf_hub_download; \
