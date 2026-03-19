@@ -22,9 +22,12 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux-Enhanced && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── ReActor node (face swap) — clone only, deps already installed ──
+# ── ReActor node (SFW version, supports HyperSwap) ───────────────
+# Original repo banned by GitHub; this is Gourieff's official SFW rewrite
 RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/Gourieff/comfyui-reactor-node.git
+    git clone https://github.com/Gourieff/ComfyUI-ReActor.git && \
+    cd ComfyUI-ReActor && \
+    pip install --no-cache-dir -r requirements.txt
 
 # ── InsightFace from GitHub (NOT PyPI!) ──────────────────────────
 # PyPI insightface has FaceAnalysis.__init__(self, name, root) — NO **kwargs.
