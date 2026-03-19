@@ -22,11 +22,9 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux-Enhanced && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── ReActor node (face swap) ──────────────────────────────────────
+# ── ReActor node (face swap) — clone only, deps already installed ──
 RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/Gourieff/comfyui-reactor-node.git && \
-    cd comfyui-reactor-node && \
-    pip install --no-cache-dir -r requirements.txt
+    git clone https://github.com/Gourieff/comfyui-reactor-node.git
 
 # ── InsightFace from GitHub (NOT PyPI!) ──────────────────────────
 # PyPI insightface has FaceAnalysis.__init__(self, name, root) — NO **kwargs.
