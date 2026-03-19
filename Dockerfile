@@ -87,3 +87,4 @@ RUN python3 /tmp/patch_handler.py && rm /tmp/patch_handler.py
 # ── Verify installation ──────────────────────────────────────────
 COPY verify_install.py /tmp/verify_install.py
 RUN python3 /tmp/verify_install.py && rm /tmp/verify_install.py
+# test build
