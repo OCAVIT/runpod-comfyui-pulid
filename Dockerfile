@@ -1,13 +1,14 @@
 # RunPod Serverless ComfyUI worker
-# Flux Dev fp8 + PuLID + GroundingDINO + ReActor + RIFE
+# Flux Dev fp8 + PuLID + InsightFace mask + RIFE
 #
 # Face consistency pipeline:
-#   1. Generate scene with Flux (text only, no PulID)
-#   2. GroundingDINO("woman with auburn hair") → SAM → mask_woman
-#   3. GroundingDINO("man with dark hair") → SAM → mask_man
-#   4. ApplyPulidFlux(portrait_woman, attn_mask=mask_woman) chained with
-#      ApplyPulidFlux(portrait_man, attn_mask=mask_man)
-#   5. KSampler img2img (denoise=0.55) → final image with correct faces
+#   Single face: Flux + PulID(portrait) → done
+#   Multi face:
+#     1. Flux generates scene (text only)
+#     2. InsightFaceMaskExtractor(gender="female") → mask_woman
+#     3. InsightFaceMaskExtractor(gender="male") → mask_man
+#     4. Pass 1: PulID(woman) + SetLatentNoiseMask(mask_woman) → inpaint woman
+#     5. Pass 2: PulID(man) + SetLatentNoiseMask(mask_man) → inpaint man
 #
 # Build: docker build --platform linux/amd64 -t comfyui-flux-face .
 
@@ -137,6 +138,9 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
 # ══════════════════════════════════════════════════════════════════
 # SECTION 4: Patches + verification
 # ══════════════════════════════════════════════════════════════════
+
+# ── InsightFace mask extractor (face detection → mask by gender) ──
+COPY insightface_mask_node /comfyui/custom_nodes/insightface_mask_node
 
 # ── Patch handler: VHS_VideoCombine "gifs" → "images" ────────────
 COPY patch_handler.py /tmp/patch_handler.py

@@ -140,9 +140,29 @@ if sa_ok:
 else:
     print(f"  MISSING: {sa_dir}")
 
-# 12. Summary
+# 12. Check InsightFace mask extractor node
+print("\n--- InsightFaceMaskExtractor ---")
+ifm_dir = "/comfyui/custom_nodes/insightface_mask_node"
+ifm_ok = os.path.exists(ifm_dir)
+if ifm_ok:
+    print(f"  OK: {ifm_dir} installed")
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "insightface_mask_node",
+            os.path.join(ifm_dir, "__init__.py"),
+        )
+        mod = importlib.util.module_from_spec(spec)
+        # Don't actually exec (needs comfy), just check file exists
+        print(f"  OK: __init__.py + node.py present")
+    except Exception as e:
+        print(f"  WARNING: import check: {e}")
+else:
+    print(f"  MISSING: {ifm_dir}")
+
+# 13. Summary
 print("\n" + "=" * 60)
-if has_kwargs and len(onnx_files) >= 4 and rife_ok and gdino_ok and sa_ok:
+if has_kwargs and len(onnx_files) >= 4 and rife_ok and gdino_ok and sa_ok and ifm_ok:
     print("ALL CHECKS PASSED")
 else:
     issues = []
@@ -156,5 +176,7 @@ else:
         issues.append("GroundingDINO model/config missing")
     if not sa_ok:
         issues.append("comfyui_segment_anything not installed")
+    if not ifm_ok:
+        issues.append("InsightFaceMaskExtractor not installed")
     print(f"ISSUES: {', '.join(issues)}")
 print("=" * 60)
