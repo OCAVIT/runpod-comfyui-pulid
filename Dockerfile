@@ -147,6 +147,9 @@ RUN mkdir -p /comfyui/custom_nodes/ComfyUI-Frame-Interpolation/ckpts/rife && \
 # ── InsightFace mask extractor (face detection → mask by gender) ──
 COPY insightface_mask_node /comfyui/custom_nodes/insightface_mask_node
 
+# ── BiSeNet face parsing mask (face-only mask, no hair) ──────────
+COPY bisenet_face_mask /comfyui/custom_nodes/bisenet_face_mask
+
 # ── Patch handler: VHS_VideoCombine "gifs" → "images" ────────────
 COPY patch_handler.py /tmp/patch_handler.py
 RUN python3 /tmp/patch_handler.py && rm /tmp/patch_handler.py
