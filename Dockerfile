@@ -1,10 +1,13 @@
 # RunPod Serverless ComfyUI worker
-# Flux Dev fp8 + PuLID + FaceDetailer + ReActor + RIFE
+# Flux Dev fp8 + PuLID + GroundingDINO + ReActor + RIFE
 #
 # Face consistency pipeline:
-#   1. Generate scene with Flux (no PulID)
-#   2. FaceDetailer: YOLO face detect → SAM segment → inpaint with PulID
-#   3. Each face gets its own PulID identity pass
+#   1. Generate scene with Flux (text only, no PulID)
+#   2. GroundingDINO("woman with auburn hair") → SAM → mask_woman
+#   3. GroundingDINO("man with dark hair") → SAM → mask_man
+#   4. ApplyPulidFlux(portrait_woman, attn_mask=mask_woman) chained with
+#      ApplyPulidFlux(portrait_man, attn_mask=mask_man)
+#   5. KSampler img2img (denoise=0.55) → final image with correct faces
 #
 # Build: docker build --platform linux/amd64 -t comfyui-flux-face .
 
@@ -26,16 +29,12 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux-Enhanced && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── Impact Pack (FaceDetailer) ────────────────────────────────────
-# Install ALL deps from requirements.txt EXCEPT sam2 (fails to compile)
+# ── GroundingDINO + SAM (text-guided face detection → masks) ────
+# comfyui_segment_anything bundles local_groundingdino + sam_hq
 RUN pip install --no-cache-dir \
-    ultralytics segment-anything scikit-image piexif \
-    opencv-python-headless scipy numpy dill matplotlib transformers
+    segment-anything addict yapf supervision transformers timm
 RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
-    mkdir -p /comfyui/models/onnx
-RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git
+    git clone https://github.com/storyicon/comfyui_segment_anything.git
 
 # ── ReActor (face swap fallback, SFW version) ────────────────────
 RUN cd /comfyui/custom_nodes && \
@@ -99,16 +98,28 @@ RUN wget -q -O /comfyui/models/insightface/inswapper_128.onnx \
     wget -q -O /comfyui/models/hyperswap/hyperswap_1c_256.onnx \
     "https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx"
 
-# ── Face restore + detection models ─────────────────────────────
+# ── Face restore models ────────────────────────────────────────
 RUN mkdir -p /comfyui/models/facerestore_models && \
     wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
-    "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth" && \
-    mkdir -p /comfyui/models/ultralytics/bbox && \
-    wget -q -O /comfyui/models/ultralytics/bbox/face_yolov8m.pt \
-    "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt" && \
-    mkdir -p /comfyui/models/sams && \
+    "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth"
+
+# ── SAM model (shared by Impact Pack + comfyui_segment_anything) ──
+RUN mkdir -p /comfyui/models/sams && \
     wget -q -O /comfyui/models/sams/sam_vit_b_01ec64.pth \
     "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
+
+# ── GroundingDINO model + config (~694MB) ──────────────────────
+RUN mkdir -p /comfyui/models/grounding-dino && \
+    wget -q -O /comfyui/models/grounding-dino/groundingdino_swint_ogc.pth \
+    "https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/groundingdino_swint_ogc.pth" && \
+    wget -q -O /comfyui/models/grounding-dino/GroundingDINO_SwinT_OGC.cfg.py \
+    "https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/GroundingDINO_SwinT_OGC.cfg.py"
+
+# ── bert-base-uncased (needed by GroundingDINO text encoder) ───
+RUN python -c "from transformers import AutoTokenizer, AutoModel; \
+    AutoTokenizer.from_pretrained('bert-base-uncased'); \
+    AutoModel.from_pretrained('bert-base-uncased')" 2>/dev/null || \
+    echo "bert-base-uncased pre-download skipped"
 
 # ── EVA-CLIP (pre-cache for PuLID cold start) ────────────────────
 RUN python -c "from huggingface_hub import hf_hub_download; \

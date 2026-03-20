@@ -114,9 +114,35 @@ for model_name in ["rife47.pth", "rife49.pth"]:
         print(f"  MISSING: {model_name}")
         rife_ok = False
 
-# 10. Summary
+# 10. Check GroundingDINO model + config
+print("\n--- GroundingDINO ---")
+gdino_ok = True
+gdino_model = "/comfyui/models/grounding-dino/groundingdino_swint_ogc.pth"
+gdino_config = "/comfyui/models/grounding-dino/GroundingDINO_SwinT_OGC.cfg.py"
+if os.path.exists(gdino_model):
+    size_mb = os.path.getsize(gdino_model) / (1024 * 1024)
+    print(f"  OK: model ({size_mb:.0f} MB)")
+else:
+    print(f"  MISSING: {gdino_model}")
+    gdino_ok = False
+if os.path.exists(gdino_config):
+    print(f"  OK: config")
+else:
+    print(f"  MISSING: {gdino_config}")
+    gdino_ok = False
+
+# 11. Check comfyui_segment_anything node
+print("\n--- comfyui_segment_anything ---")
+sa_dir = "/comfyui/custom_nodes/comfyui_segment_anything"
+sa_ok = os.path.exists(sa_dir)
+if sa_ok:
+    print(f"  OK: {sa_dir} installed")
+else:
+    print(f"  MISSING: {sa_dir}")
+
+# 12. Summary
 print("\n" + "=" * 60)
-if has_kwargs and len(onnx_files) >= 4 and rife_ok:
+if has_kwargs and len(onnx_files) >= 4 and rife_ok and gdino_ok and sa_ok:
     print("ALL CHECKS PASSED")
 else:
     issues = []
@@ -126,5 +152,9 @@ else:
         issues.append(f"only {len(onnx_files)} ONNX files (need 4+)")
     if not rife_ok:
         issues.append("RIFE models missing or corrupted")
+    if not gdino_ok:
+        issues.append("GroundingDINO model/config missing")
+    if not sa_ok:
+        issues.append("comfyui_segment_anything not installed")
     print(f"ISSUES: {', '.join(issues)}")
 print("=" * 60)
