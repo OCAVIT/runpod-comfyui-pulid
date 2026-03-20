@@ -150,6 +150,9 @@ COPY insightface_mask_node /comfyui/custom_nodes/insightface_mask_node
 # ── BiSeNet face parsing mask (face-only mask, no hair) ──────────
 COPY bisenet_face_mask /comfyui/custom_nodes/bisenet_face_mask
 
+# ── InsightFace face counter (count faces + gender after generation) ──
+COPY insightface_count /comfyui/custom_nodes/insightface_count
+
 # ── Patch handler: VHS_VideoCombine "gifs" → "images" ────────────
 COPY patch_handler.py /tmp/patch_handler.py
 RUN python3 /tmp/patch_handler.py && rm /tmp/patch_handler.py
