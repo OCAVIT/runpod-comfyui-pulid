@@ -61,7 +61,8 @@ RUN mkdir -p /root/.insightface/models && \
     rm buffalo_l.zip && \
     wget -q -O /comfyui/models/insightface/inswapper_128.onnx \
     "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx" && \
-    wget -q -O /comfyui/models/insightface/hyperswap_1c_256.onnx \
+    mkdir -p /comfyui/models/hyperswap && \
+    wget -q -O /comfyui/models/hyperswap/hyperswap_1c_256.onnx \
     "https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx" && \
     mkdir -p /comfyui/models/facerestore_models && \
     wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
