@@ -26,18 +26,23 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux-Enhanced && \
     pip install --no-cache-dir -r requirements.txt
 
+# ── Impact Pack dependencies (install BEFORE cloning to avoid broken requirements.txt) ──
+RUN pip install --no-cache-dir \
+    segment-anything scikit-image piexif opencv-python-headless scipy dill matplotlib
+
+# ── SAM2 from Meta (Impact Pack needs it, install separately) ────
+RUN pip install --no-cache-dir "git+https://github.com/facebookresearch/sam2.git" || \
+    echo "SAM2 install failed (non-fatal, SAM v1 still works)"
+
 # ── Impact Pack (FaceDetailer, YOLO bbox, SAM segmentation) ──────
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
     cd ComfyUI-Impact-Pack && \
-    pip install --no-cache-dir -r requirements.txt && \
-    python install.py || true
+    COMFYUI_PATH=/comfyui COMFYUI_MODEL_PATH=/comfyui/models python install.py || true
 
 # ── Impact Subpack (dependency) ──────────────────────────────────
 RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git && \
-    cd ComfyUI-Impact-Subpack && \
-    pip install --no-cache-dir -r requirements.txt
+    git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git
 
 # ── ReActor (face swap fallback, SFW version) ────────────────────
 RUN cd /comfyui/custom_nodes && \
