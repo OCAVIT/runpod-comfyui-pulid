@@ -95,9 +95,9 @@ RUN mkdir -p /comfyui/models/insightface/models && \
 # ── Face swap models (ReActor) ───────────────────────────────────
 RUN wget -q -O /comfyui/models/insightface/inswapper_128.onnx \
     "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx" && \
-    mkdir -p /comfyui/models/hyperswap && \
-    wget -q -O /comfyui/models/hyperswap/hyperswap_1c_256.onnx \
-    "https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx"
+    mkdir -p /comfyui/models/reswapper && \
+    wget -q -O /comfyui/models/reswapper/reswapper_256.onnx \
+    "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/reswapper_256.onnx"
 
 # ── Face restore models ────────────────────────────────────────
 RUN mkdir -p /comfyui/models/facerestore_models && \
