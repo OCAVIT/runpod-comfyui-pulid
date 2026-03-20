@@ -11,7 +11,7 @@ FROM runpod/worker-comfyui:5.7.1-flux1-dev-fp8
 # ── Install system tools (not in base image) ────────────────────
 # build-essential + python3-dev needed to compile insightface from GitHub source
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget unzip build-essential python3-dev && \
+    wget unzip build-essential python3-dev g++ && \
     rm -rf /var/lib/apt/lists/*
 
 # ── PuLID-Flux custom node (Enhanced version with attn_mask fix) ──────
@@ -27,6 +27,19 @@ RUN cd /comfyui/custom_nodes && \
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/Gourieff/ComfyUI-ReActor.git && \
     cd ComfyUI-ReActor && \
+    pip install --no-cache-dir -r requirements.txt
+
+# ── Impact Pack (FaceDetailer, YOLO bbox, SAM segmentation) ──────
+RUN cd /comfyui/custom_nodes && \
+    git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
+    cd ComfyUI-Impact-Pack && \
+    pip install --no-cache-dir -r requirements.txt && \
+    python install.py
+
+# ── Impact Subpack (dependency) ──────────────────────────────────
+RUN cd /comfyui/custom_nodes && \
+    git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git && \
+    cd ComfyUI-Impact-Subpack && \
     pip install --no-cache-dir -r requirements.txt
 
 # ── InsightFace from GitHub (NOT PyPI!) ──────────────────────────
@@ -67,6 +80,14 @@ RUN mkdir -p /root/.insightface/models && \
     mkdir -p /comfyui/models/facerestore_models && \
     wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
     "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth"
+
+# ── YOLO face detection + SAM (for FaceDetailer) ─────────────────
+RUN mkdir -p /comfyui/models/ultralytics/bbox && \
+    wget -q -O /comfyui/models/ultralytics/bbox/face_yolov8m.pt \
+    "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt" && \
+    mkdir -p /comfyui/models/sams && \
+    wget -q -O /comfyui/models/sams/sam_vit_b_01ec64.pth \
+    "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
 
 # ── Ensure onnxruntime-gpu ────────────────────────────────────────
 RUN pip uninstall -y onnxruntime 2>/dev/null; \
