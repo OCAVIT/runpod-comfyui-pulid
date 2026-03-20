@@ -30,7 +30,8 @@ RUN cd /comfyui/custom_nodes && \
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
     cd ComfyUI-Impact-Pack && \
-    pip install --no-cache-dir -r requirements.txt || true
+    pip install --no-cache-dir -r requirements.txt && \
+    python install.py || true
 
 # ── Impact Subpack (dependency) ──────────────────────────────────
 RUN cd /comfyui/custom_nodes && \
