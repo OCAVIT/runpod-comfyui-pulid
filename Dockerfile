@@ -104,6 +104,11 @@ RUN mkdir -p /comfyui/models/facerestore_models && \
     wget -q -O /comfyui/models/facerestore_models/GFPGANv1.4.pth \
     "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth"
 
+# ── YOLO face detection (for ReActor MaskHelper) ──────────────
+RUN mkdir -p /comfyui/models/ultralytics/bbox && \
+    wget -q -O /comfyui/models/ultralytics/bbox/face_yolov8m.pt \
+    "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt"
+
 # ── SAM model (shared by Impact Pack + comfyui_segment_anything) ──
 RUN mkdir -p /comfyui/models/sams && \
     wget -q -O /comfyui/models/sams/sam_vit_b_01ec64.pth \
