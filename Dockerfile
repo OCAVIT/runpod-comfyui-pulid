@@ -26,14 +26,16 @@ RUN cd /comfyui/custom_nodes && \
     cd ComfyUI-PuLID-Flux-Enhanced && \
     pip install --no-cache-dir -r requirements.txt
 
-# ── Impact Pack (FaceDetailer) — minimal install ─────────────────
-# Only install deps needed for FaceDetailer (YOLO + SAM), skip SAM2/broken requirements
-RUN pip install --no-cache-dir ultralytics segment-anything
+# ── Impact Pack (FaceDetailer) ────────────────────────────────────
+# Install ALL deps from requirements.txt EXCEPT sam2 (fails to compile)
+RUN pip install --no-cache-dir \
+    ultralytics segment-anything scikit-image piexif \
+    opencv-python-headless scipy numpy dill matplotlib transformers
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
     cd ComfyUI-Impact-Pack && \
-    mkdir -p impact/config && \
-    echo '{}' > impact/config/impact-pack.yaml
+    touch impact/config/__init__.py 2>/dev/null; \
+    mkdir -p /comfyui/models/onnx
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git
 
