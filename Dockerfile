@@ -33,8 +33,6 @@ RUN pip install --no-cache-dir \
     opencv-python-headless scipy numpy dill matplotlib transformers
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
-    cd ComfyUI-Impact-Pack && \
-    touch impact/config/__init__.py 2>/dev/null; \
     mkdir -p /comfyui/models/onnx
 RUN cd /comfyui/custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git
